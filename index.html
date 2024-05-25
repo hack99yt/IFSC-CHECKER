@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFSC Code Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            animation: fadeInPage 1s ease-in-out;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .success-message {
+            color: green;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .success-message::before {
+            content: '✔';
+            margin-right: 10px;
+        }
+
+        .detail {
+            opacity: 0;
+            animation: fadeInDetail 0.5s forwards;
+        }
+
+        .detail:nth-child(1) { animation-delay: 0.5s; }
+        .detail:nth-child(2) { animation-delay: 1s; }
+        .detail:nth-child(3) { animation-delay: 1.5s; }
+        .detail:nth-child(4) { animation-delay: 2s; }
+        .detail:nth-child(5) { animation-delay: 2.5s; }
+        .detail:nth-child(6) { animation-delay: 3s; }
+        .detail:nth-child(7) { animation-delay: 3.5s; }
+        .detail:nth-child(8) { animation-delay: 4s; }
+        .detail:nth-child(9) { animation-delay: 4.5s; }
+        .detail:nth-child(10) { animation-delay: 5s; }
+        .detail:nth-child(11) { animation-delay: 5.5s; }
+        .detail:nth-child(12) { animation-delay: 6s; }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDetail {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IFSC Validation</h1>
+        <input type="text" id="ifscInput" placeholder="IFSC Code">
+        <button onclick="lookupIFSC()">Submit</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        async function lookupIFSC() {
+            const ifsc = document.getElementById('ifscInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!ifsc) {
+                resultDiv.innerHTML = "Please enter an IFSC code.";
+                return;
+            }
+
+            const apiUrl = 'https://api.attestr.com/api/v1/public/finanx/ifsc';
+            const authToken = "T1gwTVFTSzh2Vmc2N25ObWc5LjY5ZjJkZmM2ZGQzYjI2ODQ5YTYxNzQyZDI5ZjVlOTE2OjE1YTc4MjA2YmQyODZlNDc1ODI1OTQxMmVjNDc2OWU5MWY0ZTc1MTA1ZjYyZWVhNQ==";
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Basic ${authToken}`
+                    },
+                    body: JSON.stringify({ ifsc })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    // Extract phone number from address if present
+                    const phoneNumber = data.address.match(/\d{10}/) ? data.address.match(/\d{10}/)[0] : 'Not available';
+
+                    // Check if UPI is available
+                    const upiAvailable = data.imps ? 'Yes' : 'No';
+
+                    resultDiv.innerHTML = `
+                        <div class="success-message">IFSC Validation Successfully Completed</div>
+                        <div class="details">
+                            <div class="detail"><strong>Bank:</strong> ${data.bank}</div>
+                            <div class="detail"><strong>IFSC:</strong> ${data.ifsc}</div>
+                            <div class="detail"><strong>MICR:</strong> ${data.micr}</div>
+                            <div class="detail"><strong>Branch:</strong> ${data.branch}</div>
+                            <div class="detail"><strong>City:</strong> ${data.city}</div>
+                            <div class="detail"><strong>District:</strong> ${data.district}</div>
+                            <div class="detail"><strong>State:</strong> ${data.state}</div>
+                            <div class="detail"><strong>Address:</strong> ${data.address}</div>
+                            <div class="detail"><strong>Phone Number:</strong> ${phoneNumber}</div>
+                            <div class="detail"><strong>NEFT:</strong> ${data.neft}</div>
+                            <div class="detail"><strong>IMPS:</strong> ${data.imps}</div>
+                            <div class="detail"><strong>RTGS:</strong> ${data.rtgs}</div>
+                            <div class="detail"><strong>UPI Available:</strong> ${upiAvailable}</div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = "Invalid IFSC code.";
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+  </html>
